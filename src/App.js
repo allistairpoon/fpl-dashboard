@@ -1,10 +1,12 @@
 import logo from './logo.svg';
 import './App.css';
+import { BarChart } from '@mui/x-charts/BarChart';
+import Dashboard from './dashboard/Dashboard'
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
+      {/* <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
           Edit <code>src/App.js</code> and save to reload.
@@ -17,7 +19,22 @@ function App() {
         >
           Learn React
         </a>
-      </header>
+        <BarChart
+          xAxis={[
+            {
+              id: 'barCategories',
+              data: ['bar A', 'bar B', 'bar C'],
+            },
+          ]}
+          series={[
+            {
+              data: [2, 5, 3],
+            },
+          ]}
+          height={300}
+        />
+      </header> */}
+      <Dashboard></Dashboard>
     </div>
   );
 }
