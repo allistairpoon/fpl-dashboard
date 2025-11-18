@@ -18,34 +18,34 @@ import {
 } from '../internals/components/CustomIcons';
 
 const data = [
-  { label: 'India', value: 50000 },
-  { label: 'USA', value: 35000 },
-  { label: 'Brazil', value: 10000 },
+  { label: 'England', value: 50000 },
+  { label: 'Africa', value: 35000 },
+  { label: 'North America', value: 10000 },
   { label: 'Other', value: 5000 },
 ];
 
 const countries = [
   {
-    name: 'India',
-    value: 50,
-    flag: <IndiaFlag />,
+    name: 'England',
+    value: 40,
+    flag: <GlobeFlag />,
     color: 'hsl(220, 25%, 65%)',
   },
   {
-    name: 'USA',
-    value: 35,
-    flag: <UsaFlag />,
+    name: 'Africa',
+    value: 5,
+    flag: <GlobeFlag />,
     color: 'hsl(220, 25%, 45%)',
   },
-  {
-    name: 'Brazil',
-    value: 10,
-    flag: <BrazilFlag />,
+  { 
+    name: 'North America',
+    value: 3,
+    flag: <GlobeFlag />,
     color: 'hsl(220, 25%, 30%)',
   },
   {
     name: 'Other',
-    value: 5,
+    value: 30,
     flag: <GlobeFlag />,
     color: 'hsl(220, 25%, 20%)',
   },
@@ -150,7 +150,7 @@ export default function ChartUserByCountry() {
             width={260}
             hideLegend
           >
-            <PieCenterLabel primaryText="98.5K" secondaryText="Total" />
+            <PieCenterLabel primaryText="12,470,933" secondaryText="Total" />
           </PieChart>
         </Box>
         {countries.map((country, index) => (
