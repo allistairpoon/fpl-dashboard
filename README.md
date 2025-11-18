@@ -5,6 +5,8 @@ Fantasy Premier League
 
 A FPL dashboard
 
++ <img width="1671" height="1160" alt="screenshot" src="https://github.com/user-attachments/assets/c964882b-ddb9-4e1f-9815-e5e76bfc09db" />
+
 ### Acknowledgement
 
 + roboflank for the JS/TS wrapper for Fantasy Premier League API
