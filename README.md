@@ -1,29 +1,38 @@
-Fantasy Premier League
+## Fantasy Premier League
 ======================
 
-## Description
+### Description
 
-A FPL dashboard
+The goal was to create an FPL Dashboard which has graphs and stats that are missing from the official site.  These include a historical graph for selectable players and stats.  For example, you might wish to compare the points per round for two players over all the gameweeks.  Another idea is to have a table for your picks but to be able to sort the data by each column.  A good example is to sort your picks by form or gameweek transfers out.  This would quickly 'suggest' who you should transfer out.  Currently, you cannot do this on the site or the app.
+
+### Design
+
++ Material UI is an open-source React component library.  Use a Material UI template that uses Material UI and MUI X components.
+
++ Use a JS wrapper for the FPL API.  This wrapper would make the axios requests to the api to retrieve the required data for the graphs and tables.
+
++ Uses React hooks to update page dynamically. 
+
++ Easy to add more mui components  to the grid.
+
 
 + <img width="1671" height="1160" alt="screenshot" src="https://github.com/user-attachments/assets/c964882b-ddb9-4e1f-9815-e5e76bfc09db" />
 
 ### Acknowledgement
 
-+ roboflank for the JS/TS wrapper for Fantasy Premier League API
++ [roboflank](https://github.com/roboflank/fpl-ts) for the JS/TS wrapper for Fantasy Premier League API
 
-## FAQ
+### Running project locally
 
-### Downloading Your Team Data
-
-You can download the data for your team by executing the following steps:
+You can run the project locally by doing the following steps:
 
 ```
-download
+rm -rf node_modules
+npm install
+npm start
 ```
 
-This will create a new folder called "team_<team_id>_data25-26" with individual files of all the important data
-
-# Links
+## Links
 
 + [JS/TS wrapper for Fantasy Premier League API](https://github.com/roboflank/fpl-ts)
 
@@ -32,3 +41,11 @@ This will create a new folder called "team_<team_id>_data25-26" with individual 
 + [Fantasy Premier League API Endpoints: A Detailed Guide](https://medium.com/@frenzelts/fantasy-premier-league-api-endpoints-a-detailed-guide-acbd5598eb19)
 
 + [Material UI Templates](https://mui.com/material-ui/getting-started/templates/)
+
++ [Free React Dashboard Templates 2025](https://mui.com/store/collections/free-react-dashboard/)
+
++ [Material UI docs ](https://mui.com/material-ui/getting-started/)
+
++ [MUI X docs ](https://mui.com/x/introduction/)
+
++ [Postman collection](https://www.postman.com/fplassist/fpl-assist/documentation/zqlmv01/fantasy-premier-league-api)
