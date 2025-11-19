@@ -15,10 +15,10 @@ The goal was to create an FPL Dashboard which has graphs and stats that are miss
 
 + Easy to add more mui components  to the grid.
 
-
-<img width="1671" height="1160" alt="screenshot" src="https://github.com/user-attachments/assets/c964882b-ddb9-4e1f-9815-e5e76bfc09db" />
+<img width="1512" height="1173" alt="Screenshot 2025-11-19 at 13 23 27" src="https://github.com/user-attachments/assets/d2cbf10d-9ad2-42ed-a158-213a08faa52c" />
 
 ### Acknowledgement
+
 
 + [roboflank](https://github.com/roboflank/fpl-ts) for the JS/TS wrapper for Fantasy Premier League API
 
