@@ -11,6 +11,12 @@ import PageViewsBarChart from './PageViewsBarChart';
 import SessionsChart from './SessionsChart';
 import StatCard from './StatCard';
 
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import { useEffect, useState } from "react";
+import { User, Player, Fixture, Team } from "fpl-ts";
+import logo from "./../../../src/headline-logo-DgE6C_gE.svg";
+
 const data = [
   {
     title: 'Users',
@@ -45,11 +51,56 @@ const data = [
 ];
 
 export default function MainGrid() {
+  const defaultID = 9366
+  const [selected, setSelected] = useState([defaultID]);
+  const [player, setPlayer] = useState([]);
+
+  const getPlayerData = async (userID) => {
+    const myuser = new User(userID)
+    const gwHistory = await myuser.gwHistory();
+    const lastGW = gwHistory.length;
+    const picks = await myuser.getPicks([lastGW]);
+    const arrayPicks = picks[lastGW.toString()];
+    const players = [];
+    for (let id in arrayPicks) {
+      const player = await new Player([
+        arrayPicks[id]["element"],
+      ]).getDetails(false, false);
+      const person = {}
+      person.id = id
+      person.name = player[0]["web_name"]
+      person.form = player[0]["form"]
+      person.current_price = player[0]["now_cost"] / 10
+      person.selected = player[0]["selected_by_percent"]
+      person.gw_points = player[0]["event_points"]
+      person.total_points = player[0]["total_points"]
+      person.ict = player[0]["ict_index"]
+      person.influence = player[0]["influence"]
+      person.creativity = player[0]["creativity"]
+      person.threat = player[0]["threat"]
+      person.gw_trans_in = player[0]["transfers_in_event"]
+      person.gw_trans_out = player[0]["transfers_out_event"]
+      person.bonus = player[0]["bonus"]
+      players.push(person);
+      }
+    setPlayer(players)
+  }
+
+  const submit = () => {
+    console.log("Grabbing data for user: " + selected);
+    getPlayerData(selected);
+  };
+
+  useEffect(() => {
+      getPlayerData(defaultID);
+  }, []);
+
   return (
     <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
       {/* cards */}
-      <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-        Overview
+      <img src={logo} className="premier-league-logo" alt="premierleaguelogo" width="253" height="63"/>
+      <Typography component="h2" variant="h4" sx={{ mb: 2 }}>
+        Dashboard
       </Typography>
       <Grid
         container
@@ -57,32 +108,50 @@ export default function MainGrid() {
         columns={12}
         sx={{ mb: (theme) => theme.spacing(2) }}
       >
-        {data.map((card, index) => (
+        {/* {data.map((card, index) => (
           <Grid key={index} size={{ xs: 12, sm: 6, lg: 3 }}>
             <StatCard {...card} />
           </Grid>
-        ))}
-        <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
+        ))} */}
+        {/* <Grid size={{ xs: 12, sm: 6, lg: 3 }}>
           <HighlightedCard />
+        </Grid> */}
+        <Grid size={{ xs: 12, md: 8 }}>
+          <SessionsChart/>
         </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <SessionsChart />
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
+        {/* <Grid size={{ xs: 12, md: 6 }}>
           <PageViewsBarChart />
-        </Grid>
+        </Grid> */}
       </Grid>
       <Typography component="h2" variant="h6" sx={{ mb: 2 }}>
-        Details
+        My Team
       </Typography>
+      <Stack direction="row" spacing={2}>
+        <Box
+          component="form"
+          sx={{ '& > :not(style)': { m: 1, width: '25ch' } }}
+          noValidate
+          autoComplete="off"
+        >
+        <TextField 
+          id="standard-basic"
+          label="ID"
+          variant="standard"
+          value={selected}
+          onChange={(e) => setSelected(e.target.value)}
+          type='number'
+        />
+        </Box>
+        <Button variant="outlined" onClick={submit} >update</Button>
+      </Stack>
       <Grid container spacing={2} columns={12}>
-        <Grid size={{ xs: 12, lg: 9 }}>
-          <CustomizedDataGrid />
+        <Grid size={{ xs: 12, lg: 15}}>
+          <CustomizedDataGrid player={player}/>
         </Grid>
         <Grid size={{ xs: 12, lg: 3 }}>
           <Stack gap={2} direction={{ xs: 'column', sm: 'row', lg: 'column' }}>
-            <CustomizedTreeView />
-            <ChartUserByCountry />
+            {/* <CustomizedTreeView /> */}
+            {/* <ChartUserByCountry /> */}
           </Stack>
         </Grid>
       </Grid>

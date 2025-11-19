@@ -7,6 +7,14 @@ import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
 import { LineChart } from '@mui/x-charts/LineChart';
 
+import OutlinedInput from '@mui/material/OutlinedInput';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
+import Button from '@mui/material/Button';
+import TextField from '@mui/material/TextField';
+import { useEffect, useState } from "react";
+import { User, Player, Fixture, Team } from "fpl-ts";
+
 function AreaGradient({ color, id }) {
   return (
     <defs>
@@ -38,24 +46,212 @@ function getDaysInMonth(month, year) {
   return days;
 }
 
-export default function SessionsChart() {
-  const theme = useTheme();
-  const data = getDaysInMonth(4, 2024);
+const defaultID = 9366
+const myuser = new User(defaultID)
+const gwHistory = await myuser.gwHistory();
+const lastGW = gwHistory.length;
+const picks = await myuser.getPicks([lastGW]);
+const arrayPicks = picks[lastGW];
+const players = [];
+for (let id in arrayPicks) {
+  const player = await new Player([
+    arrayPicks[id]["element"],
+  ]).getDetails(false, false);
+  const element = {}
+  element.id = player[0]["id"]
+  element.name = player[0]["web_name"]
+  players.push(element);
+}
+const initialPlayerName = players.map(a => a.name)
 
+export default function SessionsChart(props) {
+  const [user, setUser] = useState([defaultID]);
+  const [playerNames, setPlayerNames] = useState([]);
+  const [selected, setSelected] = useState(initialPlayerName[0]);
+  const [player, setPlayer] = useState([]);
+  const [selected2, setSelected2] = useState(initialPlayerName[1]);
+  const [player2, setPlayer2] = useState([]);
+
+  const theme = useTheme();
   const colorPalette = [
     theme.palette.primary.light,
     theme.palette.primary.main,
     theme.palette.primary.dark,
   ];
 
+  const ITEM_HEIGHT = 48;
+  const ITEM_PADDING_TOP = 8;
+  const MenuProps = {
+    PaperProps: {
+      style: {
+        maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+        width: 250,
+      },
+    },
+  };
+
+  //x-axis
+  const data = [];
+  for (let gameweek = 1; gameweek < lastGW+2; gameweek++){
+    data.push(gameweek)
+  }
+
+  const getPlayerData = async (userID, playerName, whichPlayer) => {
+    try {
+      const pointsArray = [];
+      const pointsArray2 = [];
+      const players = [];
+
+      const myuser = new User(userID)
+      const gwHistory = await myuser.gwHistory();
+      const lastGW = gwHistory.length;
+      const picks = await myuser.getPicks([lastGW]);
+      const arrayPicks = picks[lastGW];
+
+      for (let id in arrayPicks) {
+        const player = await new Player([
+          arrayPicks[id]["element"],
+        ]).getDetails(false, false);
+        const element = {}
+        element.id = player[0]["id"]
+        element.name = player[0]["web_name"]
+        players.push(element);
+      }
+      var playerArray = players.filter(function (player) {
+        return player.name ===  playerName
+      });
+      const id = playerArray[0].id
+      const player = await new Player([
+        id
+      ]).getDetails(true, false);
+      const summary = Object.fromEntries(
+        Object.entries(player[0]).filter(
+          ([key, value]) => key === 'summary' 
+        )
+      );
+      const history = Object.fromEntries(
+        Object.entries(summary['summary']).filter(
+          ([key, value]) => key === 'history' 
+        )
+      );
+      for (let gameweek = 0; gameweek < lastGW; gameweek++) {
+        const totalPoints = Object.fromEntries(
+          Object.entries(history['history'][gameweek]).filter(
+            ([key, value]) => key === 'total_points' 
+          )
+        );
+        whichPlayer ? pointsArray.push(totalPoints['total_points']) : pointsArray2.push(totalPoints['total_points'])
+      }
+      whichPlayer ? setPlayer(pointsArray) : setPlayer2(pointsArray2);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const getPlayerNames = async (userID) => {
+    const myuser = new User(userID)
+    const gwHistory = await myuser.gwHistory();
+    const lastGW = gwHistory.length;
+    const picks = await myuser.getPicks([lastGW]);
+    const arrayPicks = picks[lastGW];
+    const players = [];
+    for (let id in arrayPicks) {
+      const player = await new Player([
+        arrayPicks[id]["element"],
+      ]).getDetails(false, false);
+      const element = {}
+      element.id = player[0]["id"]
+      element.name = player[0]["web_name"]
+      players.push(element);
+    }
+    setPlayerNames(players.map(a => a.name))
+  }
+
+  const submit = () => {
+    console.log("Grabbing data for first player: " + selected);
+    getPlayerData(user, selected, true);
+  };
+
+  const submit2 = () => {
+    console.log("Grabbing data for second player: " + selected2);
+    getPlayerData(user, selected2, false);
+  };
+
+  const updateUser = () => {
+    console.log("Grabbing data for user: " + user);
+    getPlayerNames(user);
+  };
+
+  useEffect(() => {
+    getPlayerNames(defaultID);
+    //fills default chart
+    getPlayerData(defaultID, initialPlayerName[0], true);
+    getPlayerData(defaultID, initialPlayerName[1], false);
+  }, []);
+
   return (
     <Card variant="outlined" sx={{ width: '100%' }}>
       <CardContent>
+      <Stack direction="row" spacing={2}>
+        {/* <InputLabel id="fpl-multiple-name-label">Players</InputLabel> */}
+          <Select
+            labelId="fpl-multiple-name-label"
+            id="fpl-multiple-name"
+            // multiple
+            value={selected}
+            onChange={(e) => setSelected(e.target.value)}
+            input={<OutlinedInput label="Name" />}
+            MenuProps={MenuProps}
+          >
+            {playerNames.map((name) => (
+              <MenuItem
+                key={name}
+                value={name}
+                // style={getStyles(name, personName, theme)}
+              >
+                {name}
+              </MenuItem>
+            ))}
+          </Select>
+          <Button variant="outlined" onClick={submit} >update</Button>
+          <Select
+            labelId="fpl-multiple-name-label"
+            id="fpl-multiple-name"
+            // multiple
+            value={selected2}
+            onChange={(e) => setSelected2(e.target.value)}
+            input={<OutlinedInput label="Name" />}
+            MenuProps={MenuProps}
+          >
+            {playerNames.map((name) => (
+              <MenuItem
+                key={name}
+                value={name}
+                // style={getStyles(name, personName, theme)}
+              >
+                {name}
+              </MenuItem>
+            ))}
+          </Select>
+          <Button variant="outlined" onClick={submit2} >update</Button>
+          <TextField 
+              id="standard-basic"
+              label="ID"
+              variant="standard"
+              value={user}
+              onChange={(e) => setUser(e.target.value)}
+              type='number'
+            />
+          <Button variant="outlined" onClick={updateUser} >go</Button>
+        </Stack>
+        <Typography variant="title" color="inherit" noWrap>
+          &nbsp;
+        </Typography>
         <Typography component="h2" variant="subtitle2" gutterBottom>
-          Sessions
+          Historical Data
         </Typography>
         <Stack sx={{ justifyContent: 'space-between' }}>
-          <Stack
+          {/* <Stack
             direction="row"
             sx={{
               alignContent: { xs: 'center', sm: 'flex-start' },
@@ -67,9 +263,9 @@ export default function SessionsChart() {
               13,277
             </Typography>
             <Chip size="small" color="success" label="+35%" />
-          </Stack>
+          </Stack> */}
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-            Sessions per day for the last 30 days
+            Round Points
           </Typography>
         </Stack>
         <LineChart
@@ -78,52 +274,30 @@ export default function SessionsChart() {
             {
               scaleType: 'point',
               data,
-              tickInterval: (index, i) => (i + 1) % 5 === 0,
+              // tickInterval: (index, i) => (i + 1) % 5 === 0,
               height: 24,
             },
           ]}
           yAxis={[{ width: 50 }]}
           series={[
             {
-              id: 'direct',
-              label: 'Direct',
+              id: 'selected',
+              label: selected,
               showMark: false,
               curve: 'linear',
-              stack: 'total',
+              //stack: 'total',
+              //stackOrder: 'ascending',
+              data: player,
               area: true,
-              stackOrder: 'ascending',
-              data: [
-                300, 900, 600, 1200, 1500, 1800, 2400, 2100, 2700, 3000, 1800, 3300,
-                3600, 3900, 4200, 4500, 3900, 4800, 5100, 5400, 4800, 5700, 6000,
-                6300, 6600, 6900, 7200, 7500, 7800, 8100,
-              ],
             },
             {
-              id: 'referral',
-              label: 'Referral',
+              id: 'selected2',
+              label: selected2,
               showMark: false,
               curve: 'linear',
-              stack: 'total',
-              area: true,
-              stackOrder: 'ascending',
-              data: [
-                500, 900, 700, 1400, 1100, 1700, 2300, 2000, 2600, 2900, 2300, 3200,
-                3500, 3800, 4100, 4400, 2900, 4700, 5000, 5300, 5600, 5900, 6200,
-                6500, 5600, 6800, 7100, 7400, 7700, 8000,
-              ],
-            },
-            {
-              id: 'organic',
-              label: 'Organic',
-              showMark: false,
-              curve: 'linear',
-              stack: 'total',
-              stackOrder: 'ascending',
-              data: [
-                1000, 1500, 1200, 1700, 1300, 2000, 2400, 2200, 2600, 2800, 2500,
-                3000, 3400, 3700, 3200, 3900, 4100, 3500, 4300, 4500, 4000, 4700,
-                5000, 5200, 4800, 5400, 5600, 5900, 6100, 6300,
-              ],
+              //stack: 'total',
+              //stackOrder: 'ascending',
+              data: player2,
               area: true,
             },
           ]}
@@ -141,7 +315,7 @@ export default function SessionsChart() {
               fill: "url('#direct')",
             },
           }}
-          hideLegend
+          // hideLegend
         >
           <AreaGradient color={theme.palette.primary.dark} id="organic" />
           <AreaGradient color={theme.palette.primary.main} id="referral" />

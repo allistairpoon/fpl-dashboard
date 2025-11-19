@@ -1,11 +1,11 @@
 import { DataGrid } from '@mui/x-data-grid';
-import { columns, rows } from '../internals/data/gridData';
+import { columns } from '../internals/data/gridData';
 
-export default function CustomizedDataGrid() {
+export default function CustomizedDataGrid(props) {
   return (
     <DataGrid
       checkboxSelection
-      rows={rows}
+      rows={props.player}
       columns={columns}
       getRowClassName={(params) =>
         params.indexRelativeToCurrentPage % 2 === 0 ? 'even' : 'odd'

@@ -16,7 +16,7 @@ The goal was to create an FPL Dashboard which has graphs and stats that are miss
 + Easy to add more mui components  to the grid.
 
 
-+ <img width="1671" height="1160" alt="screenshot" src="https://github.com/user-attachments/assets/c964882b-ddb9-4e1f-9815-e5e76bfc09db" />
+<img width="1671" height="1160" alt="screenshot" src="https://github.com/user-attachments/assets/c964882b-ddb9-4e1f-9815-e5e76bfc09db" />
 
 ### Acknowledgement
 

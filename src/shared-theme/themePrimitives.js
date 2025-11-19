@@ -219,8 +219,8 @@ export const colorSchemes = {
   light: {
     palette: {
       primary: {
-        light: brand[200],
-        main: brand[400],
+        light: green[300],
+        main: brand[200],
         dark: brand[700],
         contrastText: brand[50],
       },
