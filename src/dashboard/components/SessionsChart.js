@@ -105,20 +105,20 @@ export default function SessionsChart(props) {
   const [stateDetails, setDetails] = useState([]);
 
   const apiHistory = async (userID) => {
-    console.log('getting history with user: ' + userID)
+    // console.log('getting history with user: ' + userID)
     axios.get("http://localhost:8080/api/history", {
       params: {
         userid: userID
       }
     }).then((data) => {
       const response = data.data;
-      console.log('mostRecentGameweek: ' + JSON.stringify(response.length))
+      // console.log('mostRecentGameweek: ' + JSON.stringify(response.length))
       setHistory(response.length);
     });
   };
 
   const apiPicks = async (userID) => {
-    console.log('getting picks with user: ' + userID + ' for gw ' + mostRecentGameweek)
+    // console.log('getting picks with user: ' + userID + ' for gw' + mostRecentGameweek)
     axios.get("http://localhost:8080/api/picks", {
       params: {
         userid: userID,
@@ -130,13 +130,13 @@ export default function SessionsChart(props) {
       for (let id in response) {
         elementIDs.push(response[id]["element"]);
       }
-      console.log('array of element ids: ' + JSON.stringify(elementIDs))
+      // console.log('array of element ids: ' + JSON.stringify(elementIDs))
       setPicks(elementIDs);
     });
   };
 
   const apiDetails = async (arrayOfElements) => {
-    console.log('getting details with arrayOfElements: ' + arrayOfElements);
+    // console.log('getting details with arrayOfElements: ' + arrayOfElements);
     const apiUrl = `http://localhost:8080/api/details`;
     const playerDetails = [];
     for (let id in arrayOfElements) {
@@ -152,7 +152,7 @@ export default function SessionsChart(props) {
           element.name = data.data[0]["web_name"]
           playerDetails.push(element);
           if(playerDetails.length === 15 ) {
-            console.log('playerDetails: ' + JSON.stringify(playerDetails));
+            // console.log('playerDetails: ' + JSON.stringify(playerDetails));
             setDetails(playerDetails)
           }
       });
@@ -161,7 +161,7 @@ export default function SessionsChart(props) {
 
   const apiMoreDetails = async (selectedElement, whichPlayer) => {
     if (selectedElement.length !== 0) {
-      console.log('getting details with selectedElement: ' + JSON.stringify(selectedElement));
+      // console.log('getting details with selectedElement: ' + JSON.stringify(selectedElement));
       const apiUrl = `http://localhost:8080/api/moredetails`;
       axios.get(apiUrl
         , {
@@ -196,8 +196,7 @@ export default function SessionsChart(props) {
             whichPlayer ? pointsArray.unshift(0) : pointsArray2.unshift(0)
           }
         }
-        console.log('pointsArray: ' + JSON.stringify(pointsArray));
-        console.log('pointsArray2: ' + JSON.stringify(pointsArray2));
+        whichPlayer ? console.log('points: ' + JSON.stringify(pointsArray)) : console.log('points: ' + JSON.stringify(pointsArray2));
         whichPlayer ? setPlayer(pointsArray) : setPlayer2(pointsArray2);
       });
     } else {
@@ -234,7 +233,7 @@ export default function SessionsChart(props) {
       var playerArray = stateDetails.filter(function (player) {
         return player.name ===  playerName
       });
-      console.log('apiMoreDetails stateDetails: ' + JSON.stringify(stateDetails))
+      // console.log('apiMoreDetails stateDetails: ' + JSON.stringify(stateDetails))
       apiMoreDetails(playerArray, whichPlayer)
     } catch (e) {
       console.log(e);
@@ -306,8 +305,8 @@ export default function SessionsChart(props) {
   };
 
   const getPlayerNames = async (userID) => {
-    console.log("getPlayerNames with user: " + userID);
-    console.log('stateDetails: ' + JSON.stringify(stateDetails))
+    // console.log("getPlayerNames with user: " + userID);
+    // console.log('stateDetails: ' + JSON.stringify(stateDetails))
     setPlayerNames(stateDetails.map(a => a.name))
     // const myuser = new User(userID)
     // const gwHistory = await myuser.gwHistory();

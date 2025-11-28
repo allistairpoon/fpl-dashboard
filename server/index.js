@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-// import path from 'path';
+import path from 'path';
 import axios from 'axios';
 import { User, Player } from "fpl-ts";
 
@@ -12,7 +12,7 @@ const corsOptions = {
     origin: "http://localhost:3000"
 };
 
-// app.use(express.static(path.join(__dirname, './clientBuild')))
+// app.use(express.static(path.join(__dirname, './build')))
 
 app.get("/api/player", cors(corsOptions), async (req, res) => {
   try {

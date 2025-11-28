@@ -15,6 +15,8 @@ The goal was to create an FPL Dashboard which has graphs and stats that are miss
 
 + Easy to add more mui components  to the grid.
 
++ Backend node server to proxy the requests to the FPL API.
+
 <img width="1512" height="1173" alt="Screenshot 2025-11-19 at 13 23 27" src="https://github.com/user-attachments/assets/d2cbf10d-9ad2-42ed-a158-213a08faa52c" />
 
 ### Acknowledgement
@@ -26,8 +28,15 @@ The goal was to create an FPL Dashboard which has graphs and stats that are miss
 
 You can run the project locally by doing the following steps:
 
+Start node server
 ```
-rm -rf node_modules
+cd fpl-dashboard/server
+node index.js
+```
+
+Start frontend
+```
+cd fpl-dashboard
 npm install
 npm start
 ```
