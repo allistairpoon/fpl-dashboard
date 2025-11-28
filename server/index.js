@@ -29,8 +29,8 @@ app.get("/api/player", cors(corsOptions), async (req, res) => {
 
 app.get("/api/history", cors(corsOptions), async (req, res) => {
   try {
-    console.log('getting history')
-    const myuser = new User(9366)
+    console.log('getting history with user ' + req.query.userid)
+    const myuser = new User(req.query.userid)
     const response = await myuser.gwHistory();
     console.log('history ' + JSON.stringify(response))
     res.send(response);
@@ -42,9 +42,9 @@ app.get("/api/history", cors(corsOptions), async (req, res) => {
 
 app.get("/api/picks", cors(corsOptions), async (req, res) => {
   try {
-    console.log('getting picks')
-    const myuser = new User(9366)
-    const lastGW = 12;
+    console.log('getting picks with user ' + req.query.userid + ' for gw' + req.query.lastgw)
+    const myuser = new User(req.query.userid)
+    const lastGW = req.query.lastgw;
     const picks = await myuser.getPicks([lastGW]);
     console.log('picks ' + JSON.stringify(picks))
     res.send(picks);

@@ -175,6 +175,15 @@ export const columns = [
     minWidth: 110,
   },
   {
+    field: 'trans_ratio',
+    type: "number",
+    headerName: '+/- Ratio',
+    headerAlign: 'right',
+    align: 'right',
+    flex: 1,
+    minWidth: 110,
+  },
+  {
     field: 'bonus',
     type: "number",
     headerName: 'Bonus',
