@@ -13,7 +13,7 @@ import Select from '@mui/material/Select';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import { useEffect, useState } from "react";
-import { User, Player, Fixture, Team } from "fpl-ts";
+import axios from 'axios';
 
 function AreaGradient({ color, id }) {
   return (
@@ -47,30 +47,163 @@ function getDaysInMonth(month, year) {
 }
 
 const defaultID = 9366
-const myuser = new User(defaultID)
-const gwHistory = await myuser.gwHistory();
-const lastGW = gwHistory.length;
-const picks = await myuser.getPicks([lastGW]);
-const arrayPicks = picks[lastGW];
-const players = [];
-for (let id in arrayPicks) {
-  const player = await new Player([
-    arrayPicks[id]["element"],
-  ]).getDetails(false, false);
-  const element = {}
-  element.id = player[0]["id"]
-  element.name = player[0]["web_name"]
-  players.push(element);
-}
-const initialPlayerName = players.map(a => a.name)
+// const gwHistory =  await axios.get("http://localhost:8080/api/history", {
+//   params: {
+//     userid: defaultID
+//   }
+// })
+// const lastGW = gwHistory.data.length;
+
+// const picks =  await axios.get("http://localhost:8080/api/picks", {
+//   params: {
+//     userid: defaultID,
+//     lastgw: lastGW
+//   }
+// })
+// const arrayPicks = picks.data[lastGW];
+// const players = [];
+// const initialPlayerName = players.map(a => a.name)
+
+// const myuser = new User(defaultID)
+// const gwHistory = await myuser.gwHistory();
+// const lastGW = 12;
+// const picks = await myuser.getPicks([lastGW]);
+// for (let id in arrayPicks) {
+//   // const player = await new Player([
+//   //   arrayPicks[id]["element"],
+//   // ]).getDetails(false, false);
+//   // console.log("basic arrayPicks: " + arrayPicks[id]["element"]);
+//   const player = await axios.get("http://localhost:8080/api/details", {
+//     params: {
+//       id: arrayPicks[id]["element"]
+//     }
+//   })
+//   const element = {}
+//   element.id = player.data[0]["id"]
+//   element.name = player.data[0]["web_name"]
+//   players.push(element);
+// }
 
 export default function SessionsChart(props) {
+  //user id
   const [user, setUser] = useState([defaultID]);
+  //array of player names
   const [playerNames, setPlayerNames] = useState([]);
-  const [selected, setSelected] = useState(initialPlayerName[0]);
+  //dropdown 1st player selected
+  const [selected, setSelected] = useState(['player']);
+  //data  1st player for chart
   const [player, setPlayer] = useState([]);
-  const [selected2, setSelected2] = useState(initialPlayerName[1]);
+  //dropdown 2nd player selected
+  const [selected2, setSelected2] = useState(['player']);
+  //data  2nd player for chart
   const [player2, setPlayer2] = useState([]);
+  //most recent gameweek
+  const [mostRecentGameweek, setHistory] = useState([]);
+  //array of element ids
+  const [statePicks, setPicks] = useState([]);
+  //array of element ids and names
+  const [stateDetails, setDetails] = useState([]);
+
+  const apiHistory = async (userID) => {
+    console.log('getting history with user: ' + userID)
+    axios.get("http://localhost:8080/api/history", {
+      params: {
+        userid: userID
+      }
+    }).then((data) => {
+      const response = data.data;
+      console.log('mostRecentGameweek: ' + JSON.stringify(response.length))
+      setHistory(response.length);
+    });
+  };
+
+  const apiPicks = async (userID) => {
+    console.log('getting picks with user: ' + userID + ' for gw ' + mostRecentGameweek)
+    axios.get("http://localhost:8080/api/picks", {
+      params: {
+        userid: userID,
+        lastgw: mostRecentGameweek
+      }
+    }).then((data) => {
+      const response = data.data[mostRecentGameweek];
+      const elementIDs = [];
+      for (let id in response) {
+        elementIDs.push(response[id]["element"]);
+      }
+      console.log('array of element ids: ' + JSON.stringify(elementIDs))
+      setPicks(elementIDs);
+    });
+  };
+
+  const apiDetails = async (arrayOfElements) => {
+    console.log('getting details with arrayOfElements: ' + arrayOfElements);
+    const apiUrl = `http://localhost:8080/api/details`;
+    const playerDetails = [];
+    for (let id in arrayOfElements) {
+      axios.get(apiUrl
+        , {
+          params: {
+            id: arrayOfElements[id]
+          }
+        }
+      ).then((data) => {
+          const element = {}
+          element.id = data.data[0]["id"]
+          element.name = data.data[0]["web_name"]
+          playerDetails.push(element);
+          if(playerDetails.length === 15 ) {
+            console.log('playerDetails: ' + JSON.stringify(playerDetails));
+            setDetails(playerDetails)
+          }
+      });
+    }
+  };
+
+  const apiMoreDetails = async (selectedElement, whichPlayer) => {
+    if (selectedElement.length !== 0) {
+      console.log('getting details with selectedElement: ' + JSON.stringify(selectedElement));
+      const apiUrl = `http://localhost:8080/api/moredetails`;
+      axios.get(apiUrl
+        , {
+          params: {
+            id: selectedElement[0].id
+          }
+        }
+      ).then((data) => {
+        const pointsArray = [];
+        const pointsArray2 = [];
+        const summary = Object.fromEntries(
+          Object.entries(data.data[0]).filter(
+            ([key, value]) => key === 'summary' 
+          )
+        );
+        const history = Object.fromEntries(
+          Object.entries(summary['summary']).filter(
+            ([key, value]) => key === 'history' 
+          )
+        );
+        for (let gameweek = 0; gameweek < history['history'].length; gameweek++) {
+          const totalPoints = Object.fromEntries(
+            Object.entries(history['history'][gameweek]).filter(
+              ([key, value]) => key === 'total_points' 
+            )
+          );
+          whichPlayer ? pointsArray.push(totalPoints['total_points']) : pointsArray2.push(totalPoints['total_points'])
+        }
+        const missingWeeks = mostRecentGameweek - history['history'].length;
+        for (let i = 0; i < missingWeeks; i++) {
+          if (history['history'].length < mostRecentGameweek) {
+            whichPlayer ? pointsArray.unshift(0) : pointsArray2.unshift(0)
+          }
+        }
+        console.log('pointsArray: ' + JSON.stringify(pointsArray));
+        console.log('pointsArray2: ' + JSON.stringify(pointsArray2));
+        whichPlayer ? setPlayer(pointsArray) : setPlayer2(pointsArray2);
+      });
+    } else {
+      console.log('no player selected');
+    }
+  };
 
   const theme = useTheme();
   const colorPalette = [
@@ -92,79 +225,123 @@ export default function SessionsChart(props) {
 
   //x-axis
   const data = [];
-  for (let gameweek = 1; gameweek < lastGW+2; gameweek++){
+  for (let gameweek = 1; gameweek < mostRecentGameweek+2; gameweek++){
     data.push(gameweek)
   }
 
   const getPlayerData = async (userID, playerName, whichPlayer) => {
     try {
-      const pointsArray = [];
-      const pointsArray2 = [];
-      const players = [];
-
-      const myuser = new User(userID)
-      const gwHistory = await myuser.gwHistory();
-      const lastGW = gwHistory.length;
-      const picks = await myuser.getPicks([lastGW]);
-      const arrayPicks = picks[lastGW];
-
-      for (let id in arrayPicks) {
-        const player = await new Player([
-          arrayPicks[id]["element"],
-        ]).getDetails(false, false);
-        const element = {}
-        element.id = player[0]["id"]
-        element.name = player[0]["web_name"]
-        players.push(element);
-      }
-      var playerArray = players.filter(function (player) {
+      var playerArray = stateDetails.filter(function (player) {
         return player.name ===  playerName
       });
-      const id = playerArray[0].id
-      const player = await new Player([
-        id
-      ]).getDetails(true, false);
-      const summary = Object.fromEntries(
-        Object.entries(player[0]).filter(
-          ([key, value]) => key === 'summary' 
-        )
-      );
-      const history = Object.fromEntries(
-        Object.entries(summary['summary']).filter(
-          ([key, value]) => key === 'history' 
-        )
-      );
-      for (let gameweek = 0; gameweek < lastGW; gameweek++) {
-        const totalPoints = Object.fromEntries(
-          Object.entries(history['history'][gameweek]).filter(
-            ([key, value]) => key === 'total_points' 
-          )
-        );
-        whichPlayer ? pointsArray.push(totalPoints['total_points']) : pointsArray2.push(totalPoints['total_points'])
-      }
-      whichPlayer ? setPlayer(pointsArray) : setPlayer2(pointsArray2);
+      console.log('apiMoreDetails stateDetails: ' + JSON.stringify(stateDetails))
+      apiMoreDetails(playerArray, whichPlayer)
     } catch (e) {
       console.log(e);
     }
+      // const myuser = new User(userID)
+      // const gwHistory = await myuser.gwHistory();
+      // const gwHistory =  await axios.get("http://localhost:8080/api/history", {
+      //   params: {
+      //     userid: userID
+      //   }
+      // })
+      // console.log('mostRecentGameweek ' + mostRecentGameweek);
+      // const lastGW = gwHistory.data.length;
+      // const picks = await myuser.getPicks([lastGW]);
+      // const picks =  await axios.get("http://localhost:8080/api/picks", {
+      //   params: {
+      //     userid: userID,
+      //     lastgw: lastGW
+      //   }
+      // })
+      // const arrayPicks = picks.data[lastGW];
+      // const elementOfIDs = statePicks;
+      // console.log("elementOfIDs: " + JSON.stringify(elementOfIDs));
+      // for (let id in elementOfIDs) {
+      //   // const player = await new Player([
+      //   //   arrayPicks[id]["element"],
+      //   // ]).getDetails(false, false);
+      //   console.log("getPlayerData arrayPicks: " + elementOfIDs[id]);
+      //   const player = await axios.get("http://localhost:8080/api/details", {
+      //     params: {
+      //       id: elementOfIDs[id]
+      //     }
+      //   })
+      //   const element = {}
+      //   element.id = player.data[0]["id"]
+      //   element.name = player.data[0]["web_name"]
+      //   players.push(element);
+      // }
+
+      // console.log('playerArray: ' + JSON.stringify(playerArray))
+      // // const id = playerArray[0].id
+      // // const player = await new Player([
+      // //   id
+      // // ]).getDetails(true, false);
+      // const player2 = await axios.get("http://localhost:8080/api/moredetails", {
+      //   params: {
+      //     id: playerArray[0].id
+      //   }
+      // })
+      // const summary = Object.fromEntries(
+      //   Object.entries(player2.data[0]).filter(
+      //     ([key, value]) => key === 'summary' 
+      //   )
+      // );
+      // const history = Object.fromEntries(
+      //   Object.entries(summary['summary']).filter(
+      //     ([key, value]) => key === 'history' 
+      //   )
+      // );
+      // for (let gameweek = 0; gameweek < lastGW; gameweek++) {
+      //   const totalPoints = Object.fromEntries(
+      //     Object.entries(history['history'][gameweek]).filter(
+      //       ([key, value]) => key === 'total_points' 
+      //     )
+      //   );
+      //   whichPlayer ? pointsArray.push(totalPoints['total_points']) : pointsArray2.push(totalPoints['total_points'])
+      // }
+      // whichPlayer ? setPlayer(pointsArray) : setPlayer2(pointsArray2);
   };
 
   const getPlayerNames = async (userID) => {
-    const myuser = new User(userID)
-    const gwHistory = await myuser.gwHistory();
-    const lastGW = gwHistory.length;
-    const picks = await myuser.getPicks([lastGW]);
-    const arrayPicks = picks[lastGW];
-    const players = [];
-    for (let id in arrayPicks) {
-      const player = await new Player([
-        arrayPicks[id]["element"],
-      ]).getDetails(false, false);
-      const element = {}
-      element.id = player[0]["id"]
-      element.name = player[0]["web_name"]
-      players.push(element);
-    }
-    setPlayerNames(players.map(a => a.name))
+    console.log("getPlayerNames with user: " + userID);
+    console.log('stateDetails: ' + JSON.stringify(stateDetails))
+    setPlayerNames(stateDetails.map(a => a.name))
+    // const myuser = new User(userID)
+    // const gwHistory = await myuser.gwHistory();
+    // const gwHistory =  await axios.get("http://localhost:8080/api/history", {
+    //   params: {
+    //     userid: userID
+    //   }
+    // })
+    // const lastGW = gwHistory.data.length;
+    // // const picks = await myuser.getPicks([lastGW]);
+    // const picks =  await axios.get("http://localhost:8080/api/picks", {
+    //   params: {
+    //     userid: userID,
+    //     lastgw: lastGW
+    //   }
+    // })
+    // const arrayPicks = picks.data[lastGW];
+    // const players = [];
+    // for (let id in arrayPicks) {
+    //   // console.log("getPlayerNames arrayPicks: " + arrayPicks[id]["element"]);
+    //   // const player = await new Player([
+    //   //   arrayPicks[id]["element"],
+    //   // ]).getDetails(false, false);
+    //   const player = await axios.get("http://localhost:8080/api/details", {
+    //     params: {
+    //       id: arrayPicks[id]["element"]
+    //     }
+    //   })
+    //   const element = {}
+    //   element.id = player.data[0]["id"]
+    //   element.name = player.data[0]["web_name"]
+    //   players.push(element);
+    // }
+    //update stateDetails
   }
 
   const submit = () => {
@@ -183,11 +360,31 @@ export default function SessionsChart(props) {
   };
 
   useEffect(() => {
-    getPlayerNames(defaultID);
-    //fills default chart
-    getPlayerData(defaultID, initialPlayerName[0], true);
-    getPlayerData(defaultID, initialPlayerName[1], false);
+    apiHistory(defaultID);
+    console.log("run useEffect on initial render for chart");
+    console.log("useeffect ran on start for user " + defaultID);
+    console.log("most recent gw: " + mostRecentGameweek);
   }, []);
+
+  useEffect(() => {
+    console.log("run useEffect on initial render for user " + defaultID);
+    apiPicks(defaultID);
+  }, [mostRecentGameweek]);
+
+  useEffect(() => {
+    console.log("run useEffect on state change for user " + user);
+    apiPicks(user);
+  }, [user]);
+
+  useEffect(() => {
+    console.log("run useEffect on state change for statePicks " + statePicks);
+    apiDetails(statePicks);
+  }, [statePicks, mostRecentGameweek]);
+
+  useEffect(() => {
+    console.log("run useEffect on state change for stateDetails " + JSON.stringify(stateDetails));
+    getPlayerNames(defaultID);
+  }, [stateDetails]);
 
   return (
     <Card variant="outlined" sx={{ width: '100%' }}>
@@ -203,6 +400,9 @@ export default function SessionsChart(props) {
             input={<OutlinedInput label="Name" />}
             MenuProps={MenuProps}
           >
+            <MenuItem key = "player" value="player">
+                <em>select</em>
+            </MenuItem>
             {playerNames.map((name) => (
               <MenuItem
                 key={name}
@@ -213,7 +413,7 @@ export default function SessionsChart(props) {
               </MenuItem>
             ))}
           </Select>
-          <Button variant="outlined" onClick={submit} >update</Button>
+          <Button variant="outlined" onClick={submit} >Update</Button>
           <Select
             labelId="fpl-multiple-name-label"
             id="fpl-multiple-name"
@@ -223,6 +423,9 @@ export default function SessionsChart(props) {
             input={<OutlinedInput label="Name" />}
             MenuProps={MenuProps}
           >
+            <MenuItem key = "player" value="player">
+                <em>select</em>
+            </MenuItem>
             {playerNames.map((name) => (
               <MenuItem
                 key={name}
@@ -233,7 +436,7 @@ export default function SessionsChart(props) {
               </MenuItem>
             ))}
           </Select>
-          <Button variant="outlined" onClick={submit2} >update</Button>
+          <Button variant="outlined" onClick={submit2} >Update</Button>
           <TextField 
               id="standard-basic"
               label="ID"
@@ -242,7 +445,7 @@ export default function SessionsChart(props) {
               onChange={(e) => setUser(e.target.value)}
               type='number'
             />
-          <Button variant="outlined" onClick={updateUser} >go</Button>
+          {/* <Button variant="outlined" onClick={updateUser} >Change ID</Button> */}
         </Stack>
         <Typography variant="title" color="inherit" noWrap>
           &nbsp;

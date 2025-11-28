@@ -14,8 +14,8 @@ import StatCard from './StatCard';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import { useEffect, useState } from "react";
-import { User, Player, Fixture, Team } from "fpl-ts";
 import logo from "./../../../src/headline-logo-DgE6C_gE.svg";
+import axios from 'axios';
 
 const data = [
   {
@@ -53,19 +53,49 @@ const data = [
 export default function MainGrid() {
   const defaultID = 9366
   const [selected, setSelected] = useState([defaultID]);
-  const [player, setPlayer] = useState([]);
+
+  const [stateHistory, setHistory] = useState([]);
+  const [statePicks, setPicks] = useState([]);
+  const [statePlayerData, setPlayer] = useState([]);
+
+  const apiHistory = async (userID) => {
+    console.log('getting history')
+    axios.get("http://localhost:8080/api/history", {
+      params: {
+        userid: userID
+      }
+    }).then((data) => {
+      const response = data.data;
+      setHistory(response);
+    });
+  };
+
+  const apiPicks = async (userID) => {
+    console.log('getting picks')
+    axios.get("http://localhost:8080/api/picks", {
+      params: {
+        userid: userID,
+        lastgw: 12
+      }
+    }).then((data) => {
+      const response = data.data;
+      setPicks(response);
+    });
+  };
 
   const getPlayerData = async (userID) => {
-    const myuser = new User(userID)
-    const gwHistory = await myuser.gwHistory();
+    const gwHistory = stateHistory;
     const lastGW = gwHistory.length;
-    const picks = await myuser.getPicks([lastGW]);
+    const picks = statePicks;
     const arrayPicks = picks[lastGW.toString()];
     const players = [];
     for (let id in arrayPicks) {
-      const player = await new Player([
-        arrayPicks[id]["element"],
-      ]).getDetails(false, false);
+      const playerResponse = await axios.get("http://localhost:8080/api/details", {
+        params: {
+          id: arrayPicks[id]["element"]
+        }
+      })
+      const player = playerResponse.data
       const person = {}
       person.id = id
       person.name = player[0]["web_name"]
@@ -80,9 +110,10 @@ export default function MainGrid() {
       person.threat = player[0]["threat"]
       person.gw_trans_in = player[0]["transfers_in_event"]
       person.gw_trans_out = player[0]["transfers_out_event"]
+      person.trans_ratio = player[0]["transfers_in_event"]/player[0]["transfers_out_event"]
       person.bonus = player[0]["bonus"]
       players.push(person);
-      }
+    }
     setPlayer(players)
   }
 
@@ -92,8 +123,18 @@ export default function MainGrid() {
   };
 
   useEffect(() => {
-      getPlayerData(defaultID);
+    console.log("run useEffect on initial render for maingrid");
+    console.log("useeffect ran on start for user " + selected);
+    getPlayerData(defaultID);
+    apiHistory(defaultID);
+    apiPicks(defaultID);
   }, []);
+
+  useEffect(() => {
+    console.log("useeffect getting history and picks for user " + selected);
+    apiHistory(selected);
+    apiPicks(selected);
+  }, [selected]);
 
   return (
     <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
@@ -142,11 +183,11 @@ export default function MainGrid() {
           type='number'
         />
         </Box>
-        <Button variant="outlined" onClick={submit} >update</Button>
+        <Button variant="outlined" onClick={submit} >Change ID</Button>
       </Stack>
       <Grid container spacing={2} columns={12}>
         <Grid size={{ xs: 12, lg: 15}}>
-          <CustomizedDataGrid player={player}/>
+          <CustomizedDataGrid player={statePlayerData}/>
         </Grid>
         <Grid size={{ xs: 12, lg: 3 }}>
           <Stack gap={2} direction={{ xs: 'column', sm: 'row', lg: 'column' }}>
