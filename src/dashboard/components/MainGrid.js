@@ -54,7 +54,7 @@ export default function MainGrid() {
   const defaultID = 9366
   const [selected, setSelected] = useState([defaultID]);
 
-  const [stateHistory, setHistory] = useState([]);
+  const [mostRecentGameweek, setHistory] = useState([]);
   const [statePicks, setPicks] = useState([]);
   const [statePlayerData, setPlayer] = useState([]);
 
@@ -66,7 +66,7 @@ export default function MainGrid() {
       }
     }).then((data) => {
       const response = data.data;
-      setHistory(response);
+      setHistory(response.length);
     });
   };
 
@@ -75,7 +75,7 @@ export default function MainGrid() {
     axios.get("http://localhost:8080/api/picks", {
       params: {
         userid: userID,
-        lastgw: 12
+        lastgw: mostRecentGameweek
       }
     }).then((data) => {
       const response = data.data;
@@ -84,10 +84,8 @@ export default function MainGrid() {
   };
 
   const getPlayerData = async (userID) => {
-    const gwHistory = stateHistory;
-    const lastGW = gwHistory.length;
     const picks = statePicks;
-    const arrayPicks = picks[lastGW.toString()];
+    const arrayPicks = picks[mostRecentGameweek];
     const players = [];
     for (let id in arrayPicks) {
       const playerResponse = await axios.get("http://localhost:8080/api/details", {
@@ -131,6 +129,11 @@ export default function MainGrid() {
   }, []);
 
   useEffect(() => {
+    console.log("run useEffect on initial render for user " + defaultID);
+    apiPicks(defaultID);
+  }, [mostRecentGameweek]);
+
+  useEffect(() => {
     console.log("useeffect getting history and picks for user " + selected);
     apiHistory(selected);
     apiPicks(selected);
@@ -139,7 +142,17 @@ export default function MainGrid() {
   return (
     <Box sx={{ width: '100%', maxWidth: { sm: '100%', md: '1700px' } }}>
       {/* cards */}
+      <img 
+        src="https://resources.premierleague.com/premierleague/photos/players/110x140/p118748.png"
+        alt="new"
+        width="53"
+      />
       <img src={logo} className="premier-league-logo" alt="premierleaguelogo" width="253" height="63"/>
+      <img 
+        src="https://resources.premierleague.com/premierleague/photos/players/110x140/p85971.png"
+        alt="new"
+        width="53"
+      />
       <Typography component="h2" variant="h4" sx={{ mb: 2 }}>
         Dashboard
       </Typography>

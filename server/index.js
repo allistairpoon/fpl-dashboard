@@ -1,18 +1,22 @@
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import axios from 'axios';
 import { User, Player } from "fpl-ts";
 
 const PORT = 8080;
 const app = express();
 
+const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
+const __dirname = path.dirname(__filename); // get the name of the directory
+
 app.use(cors());
 const corsOptions = {
     origin: "http://localhost:3000"
 };
 
-// app.use(express.static(path.join(__dirname, './build')))
+app.use(express.static(path.join(__dirname, './build')))
 
 app.get("/api/player", cors(corsOptions), async (req, res) => {
   try {
